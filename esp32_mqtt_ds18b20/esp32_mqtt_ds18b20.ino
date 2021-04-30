@@ -7,7 +7,6 @@
 #include "OTA.h"
 #include "SerialOTA.h"
 
-#include <OneWire.h>
 #include <DallasTemperature.h>
 
 OneWire oneWire(oneWireBus);
