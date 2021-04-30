@@ -1,3 +1,4 @@
 myCredentials/
-esp32_ds18b20_mqtt/settings.h
-esp32_dht11_mqtt/settings.h
+esp32_mqtt_ds18b20/settings.h
+esp32_mqtt_dht11/settings.h
+esp32_mqtt_ds18b20_multiple/settings.h
