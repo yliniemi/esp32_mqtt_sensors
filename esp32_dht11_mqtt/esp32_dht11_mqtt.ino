@@ -1,4 +1,3 @@
-#include <EspMQTTClient.h>
 #include "settings.h"             // THIS IS VERY IMPORTANT. CHANGE TESE SETTINGS HERE
 #include <myCredentials.h>        // THIS ONE TOO. these is myCredentials.zip on the root of this repository. include it as a library and the edit the file with your onw ips and stuff
 
@@ -6,12 +5,9 @@
 #include "setupWifi.h"
 #include "OTA.h"
 #include "SerialOTA.h"
+#include <DHT.h>                  // dht library by adafruit
 
-#include <OneWire.h>
-#include <DallasTemperature.h>
-
-OneWire oneWire(oneWireBus);
-DallasTemperature sensors(&oneWire);
+DHT dht(DHTPIN, DHTTYPE);                           // Alustus
 
 /* // This one lets EspMQTTclient control MQTT and WiFi
 EspMQTTClient MQTTclient(
@@ -59,14 +55,17 @@ void setup() {
 
   setupSerialOTA();
 
+  Serial.println("DHT11 testi!");
+  dht.begin();
+
   // setupMQTT(HOSTNAME, MQTT_SERVER);
   MQTTclient.enableDebuggingMessages(); // Enable debugging messages sent to serial output
-
+  
   // I had to do this trickery because EspMQTTclient -library doesn't support Strings for the lastwill for some reason
   String lastWillTopic = String(HOSTNAME) + "/lastwill";
-  // char lastWillTopicChar[lastWillTopic.length() + 2];
+  //char lastWillTopicChar[lastWillTopic.length() + 1];
   static char lastWillTopicChar[65];
-  lastWillTopic.toCharArray(lastWillTopicChar, lastWillTopic.length() + 1);
+  lastWillTopic.toCharArray(lastWillTopicChar, lastWillTopic.length());
   SerialOTA.println(lastWillTopicChar);
   Serial.println(lastWillTopicChar);
   MQTTclient.enableLastWillMessage(lastWillTopicChar, "What a world, what a world!");
@@ -87,13 +86,39 @@ void loop()
   SerialOTA.println();
   SerialOTA.print("loop count: ");
   SerialOTA.println(loop_count);
+  
   MQTTclient.publish(String(HOSTNAME) + "/loop_count", String(loop_count));
 
-  sensors.requestTemperatures();
-  float temperature = sensors.getTempCByIndex(0);
-  if (temperature != -127) MQTTclient.publish(String(HOSTNAME) + "/temperature", String(temperature));          // the ds18b20 library gives a measurement of -127 when it doesn't get a reading
-  Serial.println(String(HOSTNAME) + " temperature is " + temperature + " °C");
-  SerialOTA.println(String(HOSTNAME) + " temperature is " + temperature + " °C");
+  //Kosteus ja lämpöä
+  dht.readTemperature();                                                //Lämpötila (celsius oletuksena)
+  dht.readHumidity();                                                   //Kosteusarvo
+
+  //Kosteus ja lämpöä
+  float temperature = dht.readTemperature(0);                           //Lue lämpötila (celsius oletuksena)
+  if (isnan(temperature))
+  {
+    Serial.println("Lämpötilan lukeminen epäonnistui!");
+    SerialOTA.println("Lämpötilan lukeminen epäonnistui!");
+  }
+  else
+  {
+    MQTTclient.publish(String(HOSTNAME) + "/temperature", String(temperature));               //Lähettää tiedon node-redille, MQTT Broker Mosquitto nimellä: "bedroom/temperature"
+    Serial.println(String(HOSTNAME) + " lämpötila on " + temperature + " °C");    //tulostaa juuri luettu lämpötila serialmonitorille
+    SerialOTA.println(String(HOSTNAME) + " lämpötila on " + temperature + " °C"); //tulostaa juuri luettu lämpötila langattomasti    
+  }
+  
+  float humidity = dht.readHumidity(0);                                 //Lue kosteus
+  if (isnan(humidity))
+  {
+    Serial.println("Kosteuden lukeminen epäonnistui!");
+    SerialOTA.println("Kosteuden lukeminen epäonnistui!");
+  }
+  else
+  {
+    MQTTclient.publish(String(HOSTNAME) + "/humidity", String(humidity));                  //Lähettää tiedon node-redille, MQTT Broker Mosquitto nimellä: "bedroom/humidity"
+    Serial.println(String(HOSTNAME) + " kosteus on " + humidity + " %");       //tulostaa juuri luettu kosteusarvo serialmonitorille
+    SerialOTA.println(String(HOSTNAME) + " kosteus on " + humidity + " %");    //tulostaa juuri luettu kosteusarvo langattomasti
+  }
   
   delay(1000);
 }
