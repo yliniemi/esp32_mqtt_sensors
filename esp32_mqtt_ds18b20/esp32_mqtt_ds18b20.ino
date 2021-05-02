@@ -42,7 +42,7 @@ void onConnectionEstablished()
   MQTTclient.publish(String(HOSTNAME) + "/alive", "I just woke up");
 }
 
-void printAddress(DeviceAddress deviceAddress)
+void printAddress(DeviceAddress address)
 { 
   Serial.print("{");
   SerialOTA.print("{");
@@ -50,13 +50,13 @@ void printAddress(DeviceAddress deviceAddress)
   {
     Serial.print("0x");
     SerialOTA.print("0x");
-    if (deviceAddress[i] < 0x10)
+    if (address[i] < 0x10)
     {
       Serial.print("0");
       SerialOTA.print("0");
     }
-    Serial.print(deviceAddress[i], HEX);
-    SerialOTA.print(deviceAddress[i], HEX);
+    Serial.print(address[i], HEX);
+    SerialOTA.print(address[i], HEX);
     if (i < 7)
     {
       Serial.print(", ");
@@ -69,7 +69,6 @@ void printAddress(DeviceAddress deviceAddress)
 
 void printSensorAddresses()
 {
-  DeviceAddress thermometer;
   Serial.println();
   Serial.print(sensors.getDeviceCount());
   Serial.println(" devices");
@@ -89,8 +88,9 @@ void printSensorAddresses()
     SerialOTA.print("Sensor ");
     SerialOTA.print(i);
     SerialOTA.print(" : ");
-    sensors.getAddress(thermometer, i);
-    printAddress(thermometer);
+    DeviceAddress address;
+    sensors.getAddress(address, i);
+    printAddress(address);
   }
 }
 
