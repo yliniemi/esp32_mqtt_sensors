@@ -1,13 +1,12 @@
-#include <EspMQTTClient.h>
+#define MAIN_INO
+#include <DallasTemperature.h>
 #include "settings.h"             // THIS IS VERY IMPORTANT. CHANGE TESE SETTINGS HERE
 #include <myCredentials.h>        // THIS ONE TOO. these is myCredentials.zip on the root of this repository. include it as a library and the edit the file with your onw ips and stuff
 
-#include <EspMQTTClient.h>
 #include "setupWifi.h"
 #include "OTA.h"
 #include "SerialOTA.h"
-
-#include <DallasTemperature.h>
+#include <EspMQTTClient.h>
 
 OneWire oneWire(oneWireBus);
 DallasTemperature sensors(&oneWire);
@@ -42,7 +41,58 @@ void onConnectionEstablished()
   });
   MQTTclient.publish(String(HOSTNAME) + "/alive", "I just woke up");
 }
-//
+
+void printAddress(DeviceAddress deviceAddress)
+{ 
+  Serial.print("{");
+  SerialOTA.print("{");
+  for (uint8_t i = 0; i < 8; i++)
+  {
+    Serial.print("0x");
+    SerialOTA.print("0x");
+    if (deviceAddress[i] < 0x10)
+    {
+      Serial.print("0");
+      SerialOTA.print("0");
+    }
+    Serial.print(deviceAddress[i], HEX);
+    SerialOTA.print(deviceAddress[i], HEX);
+    if (i < 7)
+    {
+      Serial.print(", ");
+      SerialOTA.print(", ");
+    }
+  }
+  Serial.println("}");
+  SerialOTA.println("}");
+}
+
+void printSensorAddresses()
+{
+  DeviceAddress thermometer;
+  Serial.println();
+  Serial.print(sensors.getDeviceCount());
+  Serial.println(" devices");
+  Serial.println();
+  SerialOTA.println();
+  SerialOTA.print(sensors.getDeviceCount());
+  SerialOTA.println(" devices");
+  SerialOTA.println();
+  
+  Serial.println("Printing addresses:");
+  SerialOTA.println("Printing addresses:");
+  for (int i = 0;  i < sensors.getDeviceCount();  i++)
+  {
+    Serial.print("Sensor ");
+    Serial.print(i);
+    Serial.print(" : ");
+    SerialOTA.print("Sensor ");
+    SerialOTA.print(i);
+    SerialOTA.print(" : ");
+    sensors.getAddress(thermometer, i);
+    printAddress(thermometer);
+  }
+}
 
 void setup() {
   Serial.begin(115200);
@@ -58,6 +108,8 @@ void setup() {
 
   setupSerialOTA();
 
+  sensors.begin();
+  
   // setupMQTT(HOSTNAME, MQTT_SERVER);
   MQTTclient.enableDebuggingMessages(); // Enable debugging messages sent to serial output
 
@@ -78,6 +130,13 @@ void loop()
   SerialOTAhandle();
   MQTTclient.loop();
   
+  static unsigned long previousTime = 0;
+  if ((millis() - previousTime > 60000) || (millis() < previousTime))
+  {
+    printSensorAddresses();
+    previousTime = millis();
+  }
+  
   static int loop_count = 0;
   loop_count++;
   Serial.println();
@@ -87,12 +146,25 @@ void loop()
   SerialOTA.print("loop count: ");
   SerialOTA.println(loop_count);
   MQTTclient.publish(String(HOSTNAME) + "/loop_count", String(loop_count));
-
+  
   sensors.requestTemperatures();
+  
+  #ifdef JUST_ONE_SENSOR
   float temperature = sensors.getTempCByIndex(0);
-  if (temperature != -127) MQTTclient.publish(String(HOSTNAME) + "/temperature", String(temperature));          // the ds18b20 library gives a measurement of -127 when it doesn't get a reading
-  Serial.println(String(HOSTNAME) + " temperature is " + temperature + " °C");
-  SerialOTA.println(String(HOSTNAME) + " temperature is " + temperature + " °C");
+  if (temperature != -127) MQTTclient.publish(String(HOSTNAME) + "/temperature/onlyOne", String(temperature));          // the ds18b20 library gives a measurement of -127 when it doesn't get a reading
+  Serial.println(String(HOSTNAME) + "/onlyOne temperature is " + temperature + " °C");
+  SerialOTA.println(String(HOSTNAME) + "/onlyOne temperature is " + temperature + " °C");
+  #endif
+
+  #ifndef JUST_ONE_SENSOR
+  for (int i = 0; sensorArray[i].name != 0; i++)
+  {
+    float temperature = sensors.getTempC(sensorArray[i].address);
+    if (temperature != -127) MQTTclient.publish(String(HOSTNAME) + "/temperature/" + sensorArray[i].name, String(temperature));          // the ds18b20 library gives a measurement of -127 when it doesn't get a reading
+    Serial.println(String(HOSTNAME) + "/" + sensorArray[i].name + " temperature is " + temperature + " °C");
+    SerialOTA.println(String(HOSTNAME) + "/" + sensorArray[i].name + " temperature is " + temperature + " °C");
+  }
+  #endif
   
   delay(1000);
 }
