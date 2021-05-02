@@ -1,10 +1,10 @@
 #include "settings.h"             // THIS IS VERY IMPORTANT. CHANGE TESE SETTINGS HERE
 #include <myCredentials.h>        // THIS ONE TOO. these is myCredentials.zip on the root of this repository. include it as a library and the edit the file with your onw ips and stuff
 
-#include <EspMQTTClient.h>
 #include "setupWifi.h"
 #include "OTA.h"
 #include "SerialOTA.h"
+#include <EspMQTTClient.h>
 #include <DHT.h>                  // dht library by adafruit
 
 DHT dht(DHTPIN, DHTTYPE);                           // Alustus
