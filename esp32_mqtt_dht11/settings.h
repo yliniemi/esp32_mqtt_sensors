@@ -1,4 +1,5 @@
 #ifndef SETTINGS_H
+#define SETTINGS_H
 
 #define HOSTNAME "makuuhuone"           // replace this with the name for this particular device. everyone deserves a unique name
 #define DHTPIN 4                        // Vasen Digital pinni 4 , keskimmäinen 3.3V, oikea edestäpäin GND.
