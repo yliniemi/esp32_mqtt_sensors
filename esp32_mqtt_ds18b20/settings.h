@@ -3,8 +3,8 @@
 
 #define HOSTNAME "myTemps1"             // replace this with the name for this particular device. everyone deserves a unique name
 #define oneWireBus 18
-// #define JUST_ONE_SENSOR             // uncomment this if you are in a hurry and don't want to manually list sensor addresses in sensorArray
-#define USING_SERIALOTA           // uncomment this if you are not using SerialOTA
+// #define JUST_ONE_SENSOR              // uncomment this if you are in a hurry and don't want to manually list sensor addresses in sensorArray
+#define USING_SERIALOTA                 // uncomment this if you are not using SerialOTA
 
 #ifdef MAIN_INO
 typedef struct sensor

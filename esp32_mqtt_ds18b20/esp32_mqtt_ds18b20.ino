@@ -5,7 +5,11 @@
 
 #include "setupWifi.h"
 #include "OTA.h"
+
+#ifdef USING_SERIALOTA
 #include "SerialOTA.h"
+#endif
+
 #include <EspMQTTClient.h>
 
 OneWire oneWire(oneWireBus);

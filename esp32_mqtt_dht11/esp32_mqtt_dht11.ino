@@ -3,7 +3,11 @@
 
 #include "setupWifi.h"
 #include "OTA.h"
+
+#ifdef USING_SERIALOTA
 #include "SerialOTA.h"
+#endif
+
 #include <EspMQTTClient.h>
 #include <DHT.h>                  // dht library by adafruit
 
