@@ -71,6 +71,7 @@ void reconnectToWifiIfNecessary()
           WiFi.disconnect();
           delay(1000);
           WiFi.mode(WIFI_STA);
+          WiFi.setHostname(HOSTNAME);
           WiFi.begin(ssid, psk);
           delay(1000);
         }
@@ -110,6 +111,7 @@ void setupWifi()
     ssid = wifiArray[i][0];
     psk = wifiArray[i][1];
     WiFi.mode(WIFI_STA);
+    WiFi.setHostname(HOSTNAME);
     WiFi.begin(ssid, psk);
     Serial.println();
     Serial.print("Trying to connect to ");
