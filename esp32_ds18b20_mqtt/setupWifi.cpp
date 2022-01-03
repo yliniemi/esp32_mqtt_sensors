@@ -29,34 +29,21 @@ void reconnectToWifiIfNecessary()
   {
     static String reconnectedAt = "";
     static bool beenDisconnected = false;
-    previousTime = millis();
     Serial.println();
     Serial.println(reconnectedAt);
     Serial.print("WiFi connections status: ");
     Serial.println(WiFi.status());
+    previousTime = millis();
     Serial.print(String("I have been on for ") + previousTime / (1000 * 60 * 60) + " hours, ");
     Serial.print(String((previousTime / (1000 * 60)) % 60) + " minutes and ");
     Serial.println(String((previousTime / 1000) % 60) + " seconds");
-    Serial.println();
-
-    #ifdef USING_SERIALOTA
-    SerialOTA.println();
-    SerialOTA.println(reconnectedAt);
-    SerialOTA.print("WiFi connections status: ");
-    SerialOTA.println(WiFi.status());
-    SerialOTA.print(String("I have been on for ") + previousTime / (1000 * 60 * 60) + " hours, ");
-    SerialOTA.print(String((previousTime / (1000 * 60)) % 60) + " minutes and ");
-    SerialOTA.println(String((previousTime / 1000) % 60) + " seconds");
-    SerialOTA.println();
-    #endif
-    
     static int tryNumber = 0;
     if (WiFi.status() != WL_CONNECTED)
     {
       tryNumber++;
       Serial.print("Try number: ");
       Serial.println(tryNumber);
-      reconnectedAt += WiFi.status() + " ";   // im doing this to differentiate regular temporary WiFi outage and a long one
+      reconnectedAt += WiFi.status();   // im doing this to differentiate regular temporary WiFi outage and a long one
       if (tryNumber > TRY_DISCONNECTING)
       {
         if (tryNumber > TIME_TO_REBOOT)
@@ -71,7 +58,6 @@ void reconnectToWifiIfNecessary()
           WiFi.disconnect();
           delay(1000);
           WiFi.mode(WIFI_STA);
-          WiFi.setHostname(HOSTNAME);
           WiFi.begin(ssid, psk);
           delay(1000);
         }
@@ -99,6 +85,7 @@ void reconnectToWifiIfNecessary()
       beenDisconnected = false;
       tryNumber = 0;
     }
+    Serial.println();
   }
 }
 
@@ -111,7 +98,6 @@ void setupWifi()
     ssid = wifiArray[i][0];
     psk = wifiArray[i][1];
     WiFi.mode(WIFI_STA);
-    WiFi.setHostname(HOSTNAME);
     WiFi.begin(ssid, psk);
     Serial.println();
     Serial.print("Trying to connect to ");
